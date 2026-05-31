@@ -3,45 +3,59 @@ use rand::Rng;
 use rand::seq::SliceRandom;
 
 pub fn strengthen_password() {
-    loop {
-        println!("\n\n\n");
-        println!("Strengthening an existing password...");
+    println!("Strengthening an existing password...");
 
-        let mut password_input = String::new();
-        io::stdin().read_line(&mut password_input).expect("Failed to read line");
-        let password = password_input.trim();
+    let password = loop {
+        let mut input = String::new();
 
-        if password.is_empty() {
-            println!("Input cannot be empty.");
-            continue;
+        io::stdin().read_line(&mut input).expect("Failed to read line");
+
+        let input = input.trim();
+
+        if !input.is_empty() {
+            break input.to_string();
         }
 
-        let charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+        println!("Input cannot be empty.");
+    };
 
-        let mut strengthened = password.to_string();
-        for _ in 0..4 {
-            let idx = rand::thread_rng().gen_range(0..charset.len());
-            strengthened.push(charset.chars().nth(idx).unwrap());
-        }
+    let charset: Vec<char> =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*".chars().collect();
 
-        if password.len() < 8 {
-            for _ in 0..8 - password.len() {
-                let idx = rand::thread_rng().gen_range(0..charset.len());
-                strengthened.push(charset.chars().nth(idx).unwrap());
-            }
-        }
+    let mut rng = rand::thread_rng();
 
-        let mut chars: Vec<char> = strengthened.chars().collect();
-        let uppercase_count = rand::thread_rng().gen_range(1..=chars.len());
-        for _ in 0..uppercase_count {
-            let idx = rand::thread_rng().gen_range(0..chars.len());
+    let mut strengthened = password;
+
+    while strengthened.len() < 8 {
+        let random_char = charset[rng.gen_range(0..charset.len())];
+        strengthened.push(random_char);
+    }
+
+    for _ in 0..4 {
+        let random_char = charset[rng.gen_range(0..charset.len())];
+        strengthened.push(random_char);
+    }
+
+    let mut chars: Vec<char> = strengthened.chars().collect();
+
+    let letter_indices: Vec<usize> = chars
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c.is_ascii_alphabetic())
+        .map(|(i, _)| i)
+        .collect();
+
+    if !letter_indices.is_empty() {
+        let uppercase_count = rng.gen_range(1..=letter_indices.len());
+
+        for &idx in letter_indices.choose_multiple(&mut rng, uppercase_count) {
             chars[idx] = chars[idx].to_ascii_uppercase();
         }
-        chars.shuffle(&mut rand::thread_rng());
-        let strengthened: String = chars.into_iter().collect();
-        println!("\n\n\n");
-        println!("Strengthened password: {}", strengthened);
-        println!("\n\n\n");
-        break;
     }
+
+    chars.shuffle(&mut rng);
+
+    let strengthened: String = chars.into_iter().collect();
+
+    println!("\nStrengthened password: {}", strengthened);
 }

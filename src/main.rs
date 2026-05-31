@@ -1,20 +1,28 @@
 use std::io;
 mod modules;
 
+fn read_u32() -> Option<u32> {
+    let mut menu_input = String::new();
+
+    io::stdin().read_line(&mut menu_input).ok()?;
+
+    menu_input.trim().parse().ok()
+}
+
 fn main() {
     loop {
-        println!("Choose an option:");
+        println!();
+        println!("Password Toolkit");
+        println!("----------------");
         println!("1. Generate a new password");
         println!("2. Strengthen an existing password");
-        println!("3. Evaluate the strength of a password");
+        println!("3. Evaluate a password");
         println!("4. Exit");
 
-        let mut menu_input = String::new();
-        io::stdin().read_line(&mut menu_input).expect("Failed to read line");
-        let menu_choice = match menu_input.trim().parse::<u32>() {
-            Ok(n) => n,
-            Err(_) => {
-                print!("Invalid input. Please enter a number between 1 and 4.\n\n\n");
+        let menu_choice = match read_u32() {
+            Some(n) => n,
+            None => {
+                println!("Invalid input.");
                 continue;
             }
         };
@@ -28,7 +36,7 @@ fn main() {
                 break;
             }
             _ => {
-                print!("Invalid choice. Please enter a number between 1 and 4.\n\n\n");
+                println!("Invalid option.");
             }
         }
     }
