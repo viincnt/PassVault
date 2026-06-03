@@ -50,8 +50,8 @@ fn draw_password_box(frame: &mut Frame, area: Rect, app: &App) {
 fn draw_evaluation(frame: &mut Frame, area: Rect, app: &App, score: u8) {
     let strength_color = theme::score_color(score);
     let strength_label = match score {
-        0..=4 => "Weak",
-        5 => "Fair",
+        0..=7 => "Weak",
+        8..=9 => "Fair",
         _ => "Strong",
     };
 
@@ -70,6 +70,10 @@ fn draw_evaluation(frame: &mut Frame, area: Rect, app: &App, score: u8) {
             Constraint::Length(3), // criteria row 1
             Constraint::Length(1), // spacer
             Constraint::Length(3), // criteria row 2
+            Constraint::Length(1), // spacer
+            Constraint::Length(3), // criteria row 3
+            Constraint::Length(1), // spacer
+            Constraint::Length(3), // criteria row 4
             Constraint::Fill(1),
         ])
         .split(area);
@@ -92,9 +96,9 @@ fn draw_evaluation(frame: &mut Frame, area: Rect, app: &App, score: u8) {
         .build();
     frame.render_widget(score_big, v[3]);
 
-    // Bar + "/ 6 · Label" on the line below the big number
+    // Bar + "/ 10 · Label" on the line below the big number
     const BAR: usize = 16;
-    let filled = ((score as usize) * BAR) / 6;
+    let filled = ((score as usize) * BAR) / 10;
     let mut bar_line: Vec<Span> = (0..BAR)
         .map(|i|
             Span::styled(
@@ -104,7 +108,7 @@ fn draw_evaluation(frame: &mut Frame, area: Rect, app: &App, score: u8) {
         )
         .collect();
     bar_line.extend([
-        Span::styled("  / 6  ", theme::muted()),
+        Span::styled("  / 10  ", theme::muted()),
         Span::styled(
             strength_label,
             Style::default().fg(strength_color).add_modifier(Modifier::BOLD)
@@ -112,12 +116,47 @@ fn draw_evaluation(frame: &mut Frame, area: Rect, app: &App, score: u8) {
     ]);
     frame.render_widget(Paragraph::new(Line::from(bar_line)).alignment(Alignment::Center), v[4]);
 
-    // Criteria grid — two rows of 3 boxes each
+    // Criteria grid — three full rows of 3 + one centered row for the 10th
     if criteria.len() >= 3 {
         draw_criteria_row(frame, v[6], &criteria[..3]);
     }
     if criteria.len() >= 6 {
         draw_criteria_row(frame, v[8], &criteria[3..6]);
+    }
+    if criteria.len() >= 9 {
+        draw_criteria_row(frame, v[10], &criteria[6..9]);
+    }
+    if criteria.len() >= 10 {
+        let cols = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Fill(1), Constraint::Fill(1), Constraint::Fill(1)])
+            .split(v[12]);
+        let text = criteria[9];
+        let is_pass = text.starts_with('✓');
+        let icon_len = text
+            .chars()
+            .next()
+            .map(|c| c.len_utf8())
+            .unwrap_or(0);
+        let (icon, rest) = text.split_at(icon_len);
+        let icon_color = if is_pass { theme::SUCCESS } else { theme::ERR };
+        let border_style = if is_pass { theme::subtle() } else { Style::default().fg(theme::ERR) };
+        frame.render_widget(
+            Paragraph::new(
+                Line::from(
+                    vec![
+                        Span::styled(
+                            icon,
+                            Style::default().fg(icon_color).add_modifier(Modifier::BOLD)
+                        ),
+                        Span::styled(rest, theme::bright())
+                    ]
+                )
+            )
+                .alignment(Alignment::Center)
+                .block(Block::default().borders(Borders::ALL).border_style(border_style)),
+            cols[1]
+        );
     }
 }
 

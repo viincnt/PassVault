@@ -272,6 +272,12 @@ impl App {
                     self.error = Some("Input cannot be empty.".into());
                     return;
                 }
+                if self.input.trim().len() < 5 {
+                    self.error = Some(
+                        "Password too short — minimum 5 characters for evaluation.".into()
+                    );
+                    return;
+                }
                 let ev = evaluator::evaluate(self.input.trim());
                 self.result_title = "Password Evaluation".into();
                 self.result_score = Some(ev.score);
@@ -282,7 +288,11 @@ impl App {
                     format!("{} Numbers", if ev.has_number { "✓" } else { "✗" }),
                     format!("{} Symbols", if ev.has_symbol { "✓" } else { "✗" }),
                     format!("{} Min 8 chars", if ev.length >= 8 { "✓" } else { "✗" }),
-                    format!("{} Min 12 chars", if ev.length >= 12 { "✓" } else { "✗" })
+                    format!("{} Min 12 chars", if ev.length >= 12 { "✓" } else { "✗" }),
+                    format!("{} No 3x repeats", if ev.no_repeats { "✓" } else { "✗" }),
+                    format!("{} No sequences", if ev.no_sequences { "✓" } else { "✗" }),
+                    format!("{} Not common", if ev.not_common { "✓" } else { "✗" }),
+                    format!("{} 16+ chars", if ev.very_long { "✓" } else { "✗" })
                 ];
                 self.input.clear();
                 self.screen = Screen::Result;

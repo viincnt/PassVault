@@ -40,8 +40,8 @@ pub fn input_border_err() -> Style {
 
 pub fn score_color(score: u8) -> Color {
     match score {
-        0..=4 => ERR,
-        5 => WARNING,
+        0..=7 => ERR,
+        8..=9 => WARNING,
         _ => SUCCESS,
     }
 }

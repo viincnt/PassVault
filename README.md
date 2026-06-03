@@ -10,6 +10,7 @@ This documentation focuses on **why** each design decision was made — not just
 ## Index
 
 ### Design Decisions
+
 High-level choices that shape the entire project.
 
 - [Why a TUI](#why-a-tui) — No GUI overhead, works over SSH, stays out of the way
@@ -17,11 +18,12 @@ High-level choices that shape the entire project.
 - [Why two generation modes](#why-two-generation-modes) — Memorability and entropy solve different problems
 
 ### Internals
+
 How each module works and why it was designed that way.
 
 - [Generator](#generator) — Memorable (word-based) and Random (character-based) strategies
 - [Strengthener](#strengthener) — Padding, capitalization, shuffle — without replacing the original
-- [Evaluator](#evaluator) — Six-point scoring system and what each criterion means
+- [Evaluator](#evaluator) — Ten-point scoring system and what each criterion means
 - [UI Architecture](#ui-architecture) — Screen state machine, event loop, theming
 
 ---
@@ -47,11 +49,11 @@ cargo build --release
 
 ## Features
 
-| Feature | What it does |
-|---|---|
-| **Generate** | Creates a brand-new password from scratch |
+| Feature        | What it does                                                      |
+| -------------- | ----------------------------------------------------------------- |
+| **Generate**   | Creates a brand-new password from scratch                         |
 | **Strengthen** | Takes a weak password and pads/mutates it into something stronger |
-| **Evaluate** | Scores any password on a 0–6 scale with per-criterion feedback |
+| **Evaluate**   | Scores any password on a 0–10 scale with per-criterion feedback   |
 
 ---
 
@@ -59,19 +61,19 @@ cargo build --release
 
 ### Global
 
-| Key | Action |
-|---|---|
+| Key   | Action                   |
+| ----- | ------------------------ |
 | `← →` | Navigate between options |
-| `↵` | Confirm / select |
-| `Esc` | Go back one screen |
-| `q` | Quit (main menu only) |
+| `↵`   | Confirm / select         |
+| `Esc` | Go back one screen       |
+| `q`   | Quit (main menu only)    |
 
 ### Result screen
 
-| Key | Action |
-|---|---|
-| `c` | Copy result to clipboard |
-| `↵` / `Esc` / `Space` | Return to main menu |
+| Key                   | Action                   |
+| --------------------- | ------------------------ |
+| `c`                   | Copy result to clipboard |
+| `↵` / `Esc` / `Space` | Return to main menu      |
 
 ---
 
@@ -85,7 +87,7 @@ A graphical interface would add a window manager dependency and make the tool un
 ### Why no storage
 
 PassVault deliberately stores nothing. There is no vault file, no master password, no encrypted database.
-The tool is a *generator and evaluator*, not a manager — passwords live in your clipboard or password manager of choice.
+The tool is a _generator and evaluator_, not a manager — passwords live in your clipboard or password manager of choice.
 A tool that never writes secrets to disk cannot leak them from disk.
 
 ### Why two generation modes
@@ -112,6 +114,7 @@ Offering both means the tool is useful whether you're locking a KeePass vault (r
 ### Strengthener
 
 `strengthen` takes an existing password and:
+
 1. Pads it to a minimum length of 8 if it's shorter.
 2. Appends 4 random characters unconditionally (increasing entropy even for already-long passwords).
 3. Randomly uppercases a random subset of alphabetic characters.
@@ -121,19 +124,25 @@ The original password characters are always preserved — the user's muscle memo
 
 ### Evaluator
 
-`evaluate` returns a score from **0 to 6** by checking six independent criteria:
+`evaluate` returns a score from **0 to 10** by checking ten independent criteria, each covering a different attack vector:
 
-| Points | Criterion |
-|---|---|
-| +1 | Contains lowercase letters |
-| +1 | Contains uppercase letters |
-| +1 | Contains digits |
-| +1 | Contains symbols |
-| +1 | Length ≥ 8 |
-| +1 | Length ≥ 12 |
+| Points | Criterion                                         | Attack vector                    |
+| ------ | ------------------------------------------------- | -------------------------------- |
+| +1     | Contains lowercase letters                        | Charset diversity                |
+| +1     | Contains uppercase letters                        | Charset diversity                |
+| +1     | Contains digits                                   | Charset diversity                |
+| +1     | Contains symbols                                  | Charset diversity                |
+| +1     | Length ≥ 8                                        | Brute force                      |
+| +1     | Length ≥ 12                                       | Brute force                      |
+| +1     | Length ≥ 16                                       | Brute force (gold standard)      |
+| +1     | No character repeated 3× in a row                 | Pattern-based attacks            |
+| +1     | No sequential runs (`123`, `abc`, `qwerty`, etc.) | Keyboard walk / sequence attacks |
+| +1     | Doesn't contain a known common password           | Dictionary attacks               |
 
-The UI maps this to three labels: **Weak** (0–4), **Fair** (5), **Strong** (6).
+The UI maps this to three labels: **Weak** (0–7), **Fair** (8–9), **Strong** (10).
 The score is displayed as a large number with a fill bar so the result is readable at a glance.
+
+Passwords shorter than 5 characters are rejected before evaluation with an error — they are too short to produce a meaningful score.
 
 ### UI Architecture
 
@@ -166,7 +175,7 @@ PassVault/
 │   ├── modules/
 │   │   ├── generator.rs            — memorable and random password generation
 │   │   ├── strengthener.rs         — password padding and mutation
-│   │   └── evaluator.rs            — six-criterion scoring
+│   │   └── evaluator.rs            — ten-criterion scoring
 │   ├── ui/
 │   │   ├── mod.rs
 │   │   ├── app.rs                  — App state, Screen enum, event loop, key handlers
@@ -186,13 +195,13 @@ PassVault/
 
 ## Dependencies
 
-| Crate | Version | Purpose |
-|---|---|---|
-| `ratatui` | 0.29 | Terminal UI framework |
-| `crossterm` | 0.28 | Cross-platform terminal input/output |
-| `tui-big-text` | 0.7 | Large pixel-font text for the logo and score display |
-| `rand` | 0.8 | Cryptographically seeded RNG for password generation |
-| `arboard` | 3 | Cross-platform clipboard access |
+| Crate          | Version | Purpose                                              |
+| -------------- | ------- | ---------------------------------------------------- |
+| `ratatui`      | 0.29    | Terminal UI framework                                |
+| `crossterm`    | 0.28    | Cross-platform terminal input/output                 |
+| `tui-big-text` | 0.7     | Large pixel-font text for the logo and score display |
+| `rand`         | 0.8     | Cryptographically seeded RNG for password generation |
+| `arboard`      | 3       | Cross-platform clipboard access                      |
 
 ---
 
