@@ -1,6 +1,6 @@
 use ratatui::style::{ Color, Modifier, Style };
 
-pub const ACCENT: Color = Color::Rgb(97, 175, 239);
+pub const ACCENT: Color = Color::Rgb(201, 70, 42);
 pub const SUCCESS: Color = Color::Rgb(152, 195, 121);
 pub const WARNING: Color = Color::Rgb(229, 192, 123);
 pub const ERR: Color = Color::Rgb(224, 108, 117);

@@ -11,8 +11,16 @@ use super::{ draw_header, draw_help, outer_layout, theme };
 
 pub fn draw(frame: &mut Frame, app: &App) {
     let areas = outer_layout(frame.area());
-    draw_header(frame, areas[0], &app.result_title);
-    draw_help(frame, areas[2], &[("↵ / Esc", "back to menu")]);
+    let title = if app.copied { "Copied to clipboard!" } else { &app.result_title };
+    draw_header(frame, areas[0], title);
+    draw_help(
+        frame,
+        areas[2],
+        &[
+            ("c", "copy"),
+            ("↵ / Esc", "back to menu"),
+        ]
+    );
 
     match app.result_score {
         Some(score) => draw_evaluation(frame, areas[1], app, score),

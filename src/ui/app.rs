@@ -1,5 +1,6 @@
 use std::{ io, time::Duration };
 use crossterm::event::{ self, Event, KeyCode, KeyEventKind };
+use arboard::Clipboard;
 use ratatui::{ backend::Backend, Terminal };
 
 use crate::modules::{ evaluator, generator, strengthener };
@@ -28,6 +29,7 @@ pub struct App {
     pub result_title: String,
     pub result_lines: Vec<String>,
     pub result_score: Option<u8>,
+    pub copied: bool,
 }
 
 impl App {
@@ -44,6 +46,7 @@ impl App {
             result_title: String::new(),
             result_lines: Vec::new(),
             result_score: None,
+            copied: false,
         }
     }
 
@@ -65,6 +68,7 @@ impl App {
             return;
         }
         self.error = None;
+        self.copied = false;
         match self.screen {
             Screen::MainMenu => self.on_main_menu(key.code),
             Screen::Generator => self.on_generator_menu(key.code),
@@ -294,6 +298,15 @@ impl App {
 
     fn on_result(&mut self, key: KeyCode) {
         match key {
+            KeyCode::Char('c') => {
+                if let Some(password) = self.result_lines.first() {
+                    if let Ok(mut clipboard) = Clipboard::new() {
+                        if clipboard.set_text(password).is_ok() {
+                            self.copied = true;
+                        }
+                    }
+                }
+            }
             KeyCode::Enter | KeyCode::Esc | KeyCode::Char(' ') => {
                 self.screen = Screen::MainMenu;
                 self.menu_cursor = 0;
