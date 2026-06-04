@@ -45,6 +45,20 @@ cargo build --release
 
 **Requirements:** Rust 1.85+ (edition 2024), a terminal with Unicode support.
 
+## Screenshots
+
+<div style="display: flex; justify-content: center; align-items: center">
+  <div>
+    <img src="screenshots/main_menu.png" width="800"/>
+  </div>
+</div>
+
+<div style="display: flex; justify-content: center; align-items: center">
+  <div>
+    <img src="screenshots/result.png" width="800"/>
+  </div>
+</div>
+
 ---
 
 ## Features
